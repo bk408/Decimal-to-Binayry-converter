@@ -3,88 +3,102 @@ const convertBtn = document.getElementById("convert-btn");
 const result = document.getElementById("result");
 const animationContainer = document.getElementById("animation-container");
 
-const animationData = [
-  {
-    inputVal: numberInput.value,
-    addElDelay: 1000,
-    msg: 'decimalToBinary(5) returns "10" + 1 (5 % 2). Then it pops off the stack.',
-    showMsgDelay: 15000,
-    removeElDelay: 20000,
-  },
-  {
-    inputVal: 2,
-    addElDelay: 1500,
-    msg: 'decimalToBinary(2) returns "1" + 0 (2 % 2) and gives that value to the stack below. Then it pops off the stack.',
-    showMsgDelay: 10000,
-    removeElDelay: 15000,
-  },
-  {
-    inputVal: 1,
-    addElDelay: 2000,
-    msg: "decimalToBinary(1) returns '1' (base case) and gives that value to the stack below. Then it pops off the stack.",
-    showMsgDelay: 5000,
-    removeElDelay: 10000,
-  },
-];
+// Function to calculate the binary representation and generate animation data dynamically
+const generateAnimationData = (input) => {
+  const animationData = [];
+  let currentInput = input;
+  let delay = 1000; // Initial delay
 
-const showAnimation = () => {
-result.innerText = "Call Stack Animation";
+  // Generate stack frames until the base case is reached
+  while (currentInput > 1) {
+    animationData.push({
+      inputVal: currentInput,
+      addElDelay: delay,
+      msg: `decimalToBinary(${currentInput}) returns "${Math.floor(
+        currentInput / 2
+      ).toString(2)}" + ${
+        currentInput % 2
+      } (${currentInput} % 2). Then it pops off the stack.`,
+      showMsgDelay: delay + 5000,
+      removeElDelay: delay + 10000,
+    });
+    currentInput = Math.floor(currentInput / 2);
+    delay += 1500; // Increment delay for each frame
+  }
+
+  // Add base case
+  animationData.push({
+    inputVal: currentInput,
+    addElDelay: delay,
+    msg: `decimalToBinary(${currentInput}) returns '${currentInput}' (base case). Then it pops off the stack.`,
+    showMsgDelay: delay + 5000,
+    removeElDelay: delay + 10000,
+  });
+
+  return animationData.reverse(); // Reverse to show stack from base case upwards
+};
+
+// Function to perform the conversion and animate the call stack
+const showAnimation = (input) => {
+  result.innerText = "Call Stack Animation";
+
+  const animationData = generateAnimationData(input);
 
   animationData.forEach((obj) => {
     setTimeout(() => {
       animationContainer.innerHTML += `
-        <p id="${obj.inputVal}" class="animation-frame">
+        <p id="frame-${obj.inputVal}" class="animation-frame">
           decimalToBinary(${obj.inputVal})
         </p>
       `;
     }, obj.addElDelay);
 
     setTimeout(() => {
-      document.getElementById(obj.inputVal).textContent = obj.msg;
+      document.getElementById(`frame-${obj.inputVal}`).textContent = obj.msg;
     }, obj.showMsgDelay);
 
     setTimeout(() => {
-      document.getElementById(obj.inputVal).remove();
+      const element = document.getElementById(`frame-${obj.inputVal}`);
+      if (element) element.remove();
     }, obj.removeElDelay);
   });
 
   setTimeout(() => {
-    result.textContent = decimalToBinary(5);
-    }, 20000);
+    result.textContent = `Binary: ${decimalToBinary(input)}`;
+  }, animationData[animationData.length - 1].removeElDelay + 1000);
 };
 
-
-const decimalToBinaryConverter = (input) => {
+// Recursive function to convert decimal to binary
+const decimalToBinary = (input) => {
   if (input === 0 || input === 1) {
-    return String(input)
+    return String(input);
   } else {
-    return decimalToBinaryConverter(Math.floor(input / 2)) + (input % 2);
+    return decimalToBinary(Math.floor(input / 2)) + (input % 2);
   }
 };
 
+// Check user input and trigger animation or direct conversion
 const checkUserInput = () => {
   const inputInt = parseInt(numberInput.value);
 
-    if (!numberInput.value || isNaN(inputInt) || numberInput < 0) {
-      alert("Please provide a number greater than or equal to 0 ")
-      return;
+  if (!numberInput.value || isNaN(inputInt) || inputInt < 0) {
+    alert("Please provide a decimal number greater than or equal to 0");
+    return;
   }
 
-   if (inputInt === 5) {
-     showAnimation();
-     return;
-   }
+  // Clear previous animations
+  animationContainer.innerHTML = "";
 
-  result.textContent = decimalToBinaryConverter(inputInt)
+  // Trigger animation with user input
+  showAnimation(inputInt);
   numberInput.value = "";
-
 };
 
-
+// Event listeners for button click and "Enter" key
 convertBtn.addEventListener("click", checkUserInput);
 
 numberInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-   checkUserInput()
- }
-})
+    checkUserInput();
+  }
+});
